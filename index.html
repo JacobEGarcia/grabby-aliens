@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grabby Aliens</title>
+<style>
+:root{--bg:#0c0e14;--card:#12162a;--line:#222b45;--ink:#e5eaf5;--dim:#8b97b8;--accent:#7ae85e;--bad:#e05e7a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:26px 18px}
+h1{font-size:26px;letter-spacing:8px;color:var(--accent);text-shadow:0 0 22px rgba(122,232,94,.25)}
+.sub{color:var(--dim);font-size:11px;letter-spacing:2.5px;margin-top:6px;text-transform:uppercase}
+#field{width:min(560px,94vw);height:340px;margin:18px 0;background:radial-gradient(circle at 50% 30%,#16203a,#0a0d18);border:1px solid var(--line);border-radius:14px;position:relative;overflow:hidden}
+#ufo{position:absolute;font-size:46px;left:44%;top:20px;transition:left .2s;filter:drop-shadow(0 10px 20px rgba(122,232,94,.3))}
+#beam{position:absolute;left:calc(44% + 8px);top:64px;width:30px;height:0;background:linear-gradient(rgba(122,232,94,.6),transparent);transition:height .3s;pointer-events:none}
+.cow{position:absolute;font-size:28px;transition:bottom .8s,opacity .5s}
+#hud{font-size:12.5px;color:var(--dim);letter-spacing:1.5px;text-align:center;line-height:2}
+#hud b{color:var(--accent)}
+#pad{display:flex;gap:8px;justify-content:center;margin-top:12px}
+button{cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-family:inherit;font-size:14px;padding:12px 20px;letter-spacing:1px;transition:.15s}
+button:hover{border-color:var(--accent)}
+#msg{margin-top:10px;font-size:12px;color:var(--dim);letter-spacing:1px;min-height:18px;text-align:center}
+</style>
+</head>
+<body>
+<h1>GRABBY ALIENS</h1>
+<div class="sub">they came for the cows &middot; they will not say why</div>
+<div id="field"><div id="ufo">🛸</div><div id="beam"></div></div>
+<div id="hud">COWS GRABBED <b id="grabbed">0</b> &middot; COWS REMAINING <b id="left">8</b> &middot; FARMER ALERTNESS <b id="alert">0</b>%</div>
+<div id="pad">
+  <button id="l">&lt; LEFT</button>
+  <button id="grab">GRAB</button>
+  <button id="r">RIGHT &gt;</button>
+</div>
+<div id="msg">position over a cow and grab. grabbing raises the farmer's alertness.</div>
+<script>
+const $=id=>document.getElementById(id);
+const field=$('field');
+let ux=44,grabbed=0,left=8,alert=0,cows=[];
+for(let i=0;i<8;i++){
+  const c=document.createElement('div');c.className='cow';c.textContent='🐄';
+  c._x=4+i*12;c.style.left=c._x+'%';c.style.bottom='6px';
+  field.appendChild(c);cows.push(c);
+}
+function place(){$('ufo').style.left=ux+'%';$('beam').style.left='calc('+ux+'% + 8px)';}
+function mv(d){ux=Math.max(2,Math.min(88,ux+d*8));place();}
+$('l').onclick=()=>mv(-1);$('r').onclick=()=>mv(1);
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')mv(-1);if(e.key==='ArrowRight')mv(1);if(e.key===' ')$('grab').click();});
+$('grab').onclick=()=>{
+  $('beam').style.height='260px';
+  setTimeout(()=>$('beam').style.height='0',400);
+  const target=cows.find(c=>Math.abs(c._x-ux)<7);
+  if(target){
+    target.style.bottom='300px';target.style.opacity='0';
+    setTimeout(()=>target.remove(),800);
+    cows=cows.filter(c=>c!==target);
+    grabbed++;left--;$('grabbed').textContent=grabbed;$('left').textContent=left;
+    alert=Math.min(100,alert+15);
+    const m=['the cow ascends, surprisingly calm','one more for the mothership. the moo fades upward','grabbed. the herd pretends not to notice'];
+    $('msg').textContent=m[Math.floor(Math.random()*m.length)];
+    if(left===0)$('msg').textContent='FIELD EMPTY. '+grabbed+' cows acquired. The aliens leave a note: "THX." The farmer finds only crop circles and questions.';
+  }else{
+    alert=Math.min(100,alert+8);
+    $('msg').textContent='the beam grabs only hay. the farmer stirs.';
+  }
+  $('alert').textContent=alert;
+  if(alert>=100){cows.forEach(c=>c.remove());$('msg').textContent='THE FARMER EMERGES WITH A FLASHLIGHT AND OPINIONS. Score: '+grabbed+' cows grabbed. The UFO departs at a casual, suspicious speed.';field.querySelectorAll('button,#ufo').forEach(()=>{});ux=-999;place();}
+};
+setInterval(()=>{alert=Math.max(0,alert-1);$('alert').textContent=alert;},900);
+place();
+</script>
+</body>
+</html>
